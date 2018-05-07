@@ -129,6 +129,25 @@ class UnoPlayer:
         """
         return any(current_card.playable(card) for card in self.hand)
 
+    def set_score(self,score=0):
+        if type(score) == int:
+            self.score = score
+        else:
+            print('score must be int')
+
+    def add_score(self,score=0):
+        if type(score) == int:
+            self.score += score
+        else:
+            print('score must be int')
+
+    def sub_score(self,score=0):
+        if type(score) == int:
+            self.score -= score
+        else:
+            print('score must be int')
+
+
 
 class UnoGame:
     """
@@ -242,13 +261,17 @@ class UnoGame:
         if card_color == 'black':
             self.current_card.temp_color = new_color
             if card_type == '+4':
+                _player.add_score(4)
                 next(self)
                 self._pick_up(self.current_player, 4)
         elif card_type == 'reverse':
+            _player.add_score(3)
             self._player_cycle.reverse()
         elif card_type == 'skip':
+            _player.add_score(2)
             next(self)
         elif card_type == '+2':
+            _player.add_score(2)
             next(self)
             self._pick_up(self.current_player, 2)
 
@@ -389,6 +412,15 @@ class AIUnoGame:
         print(_('Your hand: {}').format(
             ' '.join(str(card) for card in self.player.hand)
         ))
+
+   def print_scores(self):
+        scores = []
+        for player in self.game.players:
+            scores.append((player.player_id, player.score))
+        print(_('SCORES\n'))
+        for i in scores:
+            print(_('Player: {}, score: {}').format(i[0], i[1]))
+
 
 if __name__ == '__main__':
     AIUnoGame(2)
