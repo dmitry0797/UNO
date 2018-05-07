@@ -29,6 +29,20 @@ class UnoCard:
         self.card_type = card_type
         self.temp_color = None
 
+        # Evaluate each card to have it's own score value to return
+        # Create values dictionary for convenient work
+        values = {i: i for i in range(0, 10)}
+        sp_values =  {'reverse': 20,
+                      'skip': 20,
+                      '+2': 20,
+                      '+4': 50,
+                      'wildcard': 50
+                     }
+
+        all_values = {**values, **sp_values}
+
+        self.value = all_values.get(self.card_type, 0)
+
     def __repr__(self):
         return _('<UnoCard object: {} {}>').format(self.color, self.card_type)
 
@@ -161,6 +175,7 @@ class UnoPlayer:
             )
         self.hand = sorted(cards)
         self.player_id = player_id
+        self.score = 0
 
     def __repr__(self):
         if self.player_id is not None:
@@ -180,6 +195,31 @@ class UnoPlayer:
         card provided), otherwise return False
         """
         return any(current_card.playable(card) for card in self.hand)
+
+    def set_score(self,score=0):
+        if type(score) == int:
+            self.score = score
+        else:
+            print('score must be int')
+
+    def add_score(self,score=0):
+        if type(score) == int:
+            self.score += score
+        else:
+            print('score must be int')
+
+    def sub_score(self,score=0):
+        if type(score) == int:
+            self.score -= score
+        else:
+            print('score must be int')
+
+    def get_score(self):
+        score_t = 0
+        for card in self.hand:
+            score_t += card.value
+        self.add_score(score_t)
+        return self.score
 
 
 class UnoGame:
@@ -407,6 +447,7 @@ class AIUnoGame:
                 game.current_card, game.current_card._color
             ))
             self.print_hand()
+            self.print_scores()
             if player.can_play(current_card):
                 played = False
                 while not played:
@@ -443,6 +484,15 @@ class AIUnoGame:
         print(_('Your hand: {}').format(
             ' '.join(str(card) for card in self.player.hand)
         ))
+
+    def print_scores(self):
+        scores = []
+        for player in self.game.players:
+            scores.append((player.player_id, player.get_score()))
+        print(_('SCORES'))
+        for i in scores:
+            print(_('Player: {}, score: {}').format(i[0], i[1]))
+
 
 if __name__ == '__main__':
     AIUnoGame(2)
