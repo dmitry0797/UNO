@@ -29,6 +29,20 @@ class UnoCard:
         self.card_type = card_type
         self.temp_color = None
 
+        # Evaluate each card to have it's own score value to return
+        # Create values dictionary for convenient work
+        values = {i: i for i in range(0, 10)}
+        sp_values =  {'reverse': 20,
+                      'skip': 20,
+                      '+2': 20,
+                      '+4': 50,
+                      'wildcard': 50
+                     }
+
+        all_values = {**values, **sp_values}
+
+        self.value = all_values.get(self.card_type, 0)
+
     def __repr__(self):
         return _('<UnoCard object: {} {}>').format(self.color, self.card_type)
 
@@ -109,6 +123,7 @@ class UnoPlayer:
             )
         self.hand = cards
         self.player_id = player_id
+        self.score = 0
 
     def __repr__(self):
         if self.player_id is not None:
@@ -147,6 +162,12 @@ class UnoPlayer:
         else:
             print('score must be int')
 
+    def get_score(self):
+        score_t = 0
+        for card in self.hand:
+            score_t += card.value
+        self.add_score(score_t)
+        return self.score
 
 
 class UnoGame:
@@ -261,17 +282,13 @@ class UnoGame:
         if card_color == 'black':
             self.current_card.temp_color = new_color
             if card_type == '+4':
-                _player.add_score(4)
                 next(self)
                 self._pick_up(self.current_player, 4)
         elif card_type == 'reverse':
-            _player.add_score(3)
             self._player_cycle.reverse()
         elif card_type == 'skip':
-            _player.add_score(2)
             next(self)
         elif card_type == '+2':
-            _player.add_score(2)
             next(self)
             self._pick_up(self.current_player, 2)
 
@@ -376,6 +393,7 @@ class AIUnoGame:
                 game.current_card, game.current_card._color
             ))
             self.print_hand()
+            self.print_scores()
             if player.can_play(current_card):
                 played = False
                 while not played:
@@ -413,11 +431,11 @@ class AIUnoGame:
             ' '.join(str(card) for card in self.player.hand)
         ))
 
-   def print_scores(self):
+    def print_scores(self):
         scores = []
         for player in self.game.players:
-            scores.append((player.player_id, player.score))
-        print(_('SCORES\n'))
+            scores.append((player.player_id, player.get_score()))
+        print(_('SCORES'))
         for i in scores:
             print(_('Player: {}, score: {}').format(i[0], i[1]))
 
