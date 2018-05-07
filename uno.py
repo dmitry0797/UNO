@@ -215,9 +215,11 @@ class UnoPlayer:
             print('score must be int')
 
     def get_score(self):
-        score_t = 0
-        for card in self.hand:
-            score_t += card.value
+        """
+        Get player's score as sum of it's handheld card values
+        and add it to previous score
+        """
+        score_t = sum([card.value for card in self.hand])
         self.add_score(score_t)
         return self.score
 
