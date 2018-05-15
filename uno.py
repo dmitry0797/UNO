@@ -175,7 +175,7 @@ class UnoPlayer:
             )
         self.hand = sorted(cards)
         self.player_id = player_id
-        self.score = 0
+        self.score = sum([card.value for card in self.hand])
 
     def __repr__(self):
         if self.player_id is not None:
@@ -215,13 +215,15 @@ class UnoPlayer:
             print('score must be int')
 
     def get_score(self):
-        """
-        Get player's score as sum of it's handheld card values
-        and add it to previous score
-        """
-        score_t = sum([card.value for card in self.hand])
-        self.add_score(score_t)
         return self.score
+
+    def update_score(self, cards=None):
+        """
+        Adds the picked up card's value to the player's score
+        """
+        for card in cards:
+
+            self.add_score(card.value)
 
 
 class UnoGame:
@@ -373,8 +375,8 @@ class UnoGame:
         """
         penalty_cards = [self.deck.pop(0) for i in range(n)]
         player.hand.extend(penalty_cards)
+        player.update_score(penalty_cards)
         player.hand.sort()
-
 
 class ReversibleCycle:
     """
@@ -453,7 +455,8 @@ class AIUnoGame:
             if player.can_play(current_card):
                 played = False
                 while not played:
-                    card_index = int(input(_('Which card do you want to play? ')))
+
+                    card_index = self.process_input(_('Which card do you want to play?: '))
                     card = player.hand[card_index]
                     if not game.current_card.playable(card):
                         print(_('Cannot play that card'))
@@ -468,6 +471,7 @@ class AIUnoGame:
                 print(_('You cannot play. You must pick up a card.'))
                 game.play(player_id, card=None)
                 self.print_hand()
+                self.print_scores()
         elif player.can_play(game.current_card):
             for i, card in enumerate(player.hand):
                 if game.current_card.playable(card):
@@ -482,6 +486,23 @@ class AIUnoGame:
             print(_("Player {} picked up").format(player))
             game.play(player=player_id, card=None)
 
+    def process_input(self, str=''):
+        ret_val = -1
+        while ret_val == -1:
+            line = input(_(str))
+            try:
+                val = int(line)
+                if val < 0:
+                    print(_("The card number must be positive or zero"))
+                else:
+                    ret_val = val
+                    break
+
+            except ValueError:
+                print(_("Enter the natural integer number"))
+
+        return ret_val
+
     def print_hand(self):
         print(_('Your hand: {}').format(
             ' '.join(str(card) for card in self.player.hand)
@@ -490,7 +511,7 @@ class AIUnoGame:
     def print_scores(self):
         scores = []
         for player in self.game.players:
-            scores.append((player.player_id, player.get_score()))
+            scores.append((player.player_id, player.score))
         print(_('SCORES'))
         for i in scores:
             print(_('Player: {}, score: {}').format(i[0], i[1]))
